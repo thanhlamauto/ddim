@@ -4,6 +4,16 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+# Patch huggingface_hub for compatibility with older diffusers
+try:
+    import huggingface_hub
+    if not hasattr(huggingface_hub, 'cached_download'):
+        from huggingface_hub import hf_hub_download
+        # Add the deprecated function back
+        huggingface_hub.cached_download = hf_hub_download
+except Exception:
+    pass
+
 
 class SimpleVAE:
     """Simple VAE wrapper that uses PyTorch for encode/decode and converts to JAX."""
