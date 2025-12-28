@@ -41,9 +41,9 @@ except ImportError:
 try:
     from utils.vae import create_vae
     VAE_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     VAE_AVAILABLE = False
-    print("VAE not available - will train in pixel space")
+    print(f"VAE not available - will train in pixel space. Error: {e}")
 
 
 class TrainState(train_state.TrainState):
@@ -261,10 +261,15 @@ def main():
     vae = None
     if VAE_AVAILABLE:
         try:
+            print(f"Loading VAE from {config.vae_model_id}...")
             vae = create_vae(config.vae_model_id)
-            print("VAE loaded successfully")
+            print("VAE loaded successfully!")
+            print(f"VAE will compress {config.data.image_size}x{config.data.image_size} images to {config.data.latent_size}x{config.data.latent_size} latents")
         except Exception as e:
-            print(f"Failed to load VAE: {e}")
+            print(f"Failed to load VAE: {type(e).__name__}: {e}")
+            print("Training will continue in pixel space (slower, requires more memory)")
+            import traceback
+            traceback.print_exc()
 
     # Diffusion params
     if config.diffusion.beta_schedule == "cosine":
