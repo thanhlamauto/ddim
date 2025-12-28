@@ -3,13 +3,21 @@
 import jax
 import jax.numpy as jnp
 
-# Monkey patch for huggingface_hub compatibility
+# Fix huggingface_hub compatibility with older diffusers
 try:
-    from huggingface_hub import hf_hub_download
     import huggingface_hub
+    from huggingface_hub import hf_hub_download
+
+    # Add back the deprecated cached_download for compatibility
     if not hasattr(huggingface_hub, 'cached_download'):
-        huggingface_hub.cached_download = lambda *args, **kwargs: hf_hub_download(*args, **kwargs)
-except ImportError:
+        def cached_download(url, *args, **kwargs):
+            # Extract repo_id and filename from the old API
+            if 'legacy_cache_layout' in kwargs:
+                del kwargs['legacy_cache_layout']
+            return hf_hub_download(*args, **kwargs)
+
+        huggingface_hub.cached_download = cached_download
+except Exception:
     pass
 
 from diffusers import FlaxAutoencoderKL
