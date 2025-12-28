@@ -14,7 +14,11 @@ export PYTHONUNBUFFERED=1
 
 # Install additional dependencies if needed
 echo "Installing dependencies..."
-pip install -q wandb PyYAML tqdm
+pip install -q -r requirements.txt
+
+# Fix tensorboard protobuf compatibility
+echo "Fixing protobuf compatibility..."
+pip install -q --upgrade "protobuf>=3.20.0,<4.0.0"
 
 # Login to wandb (optional - set your API key in Kaggle secrets)
 if [ ! -z "$WANDB_API_KEY" ]; then

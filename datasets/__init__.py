@@ -5,11 +5,18 @@ import torchvision.transforms as transforms
 import torchvision.transforms.functional as F
 from torchvision.datasets import CIFAR10
 from datasets.celeba import CelebA
-from datasets.ffhq import FFHQ
-from datasets.lsun import LSUN
 from datasets.plantvillage import PlantVillage
 from torch.utils.data import Subset
 import numpy as np
+
+# Lazy imports for optional datasets
+def _import_ffhq():
+    from datasets.ffhq import FFHQ
+    return FFHQ
+
+def _import_lsun():
+    from datasets.lsun import LSUN
+    return LSUN
 
 
 class Crop(object):
@@ -108,6 +115,7 @@ def get_dataset(args, config):
         )
 
     elif config.data.dataset == "LSUN":
+        LSUN = _import_lsun()
         train_folder = "{}_train".format(config.data.category)
         val_folder = "{}_val".format(config.data.category)
         if config.data.random_flip:
@@ -149,6 +157,7 @@ def get_dataset(args, config):
         )
 
     elif config.data.dataset == "FFHQ":
+        FFHQ = _import_ffhq()
         if config.data.random_flip:
             dataset = FFHQ(
                 path=os.path.join(args.exp, "datasets", "FFHQ"),
