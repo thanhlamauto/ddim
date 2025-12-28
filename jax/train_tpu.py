@@ -6,6 +6,11 @@ Usage:
 """
 
 import os
+# CRITICAL: Set these BEFORE any other imports to avoid protobuf segfault
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
+os.environ['JAX_PLATFORMS'] = 'tpu'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import functools
 from typing import Any
 
