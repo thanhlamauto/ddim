@@ -7,6 +7,7 @@ from torchvision.datasets import CIFAR10
 from datasets.celeba import CelebA
 from datasets.ffhq import FFHQ
 from datasets.lsun import LSUN
+from datasets.plantvillage import PlantVillage
 from torch.utils.data import Subset
 import numpy as np
 
@@ -175,6 +176,49 @@ def get_dataset(args, config):
         )
         test_dataset = Subset(dataset, test_indices)
         dataset = Subset(dataset, train_indices)
+
+    elif config.data.dataset == "PlantVillage":
+        # For Kaggle: /kaggle/input/plantdisease/PlantVillage
+        # For local: should be specified in config or args
+        data_root = getattr(config.data, "data_root", os.path.join(args.exp, "datasets", "PlantVillage"))
+
+        if config.data.random_flip:
+            train_transform = transforms.Compose([
+                transforms.Resize(config.data.image_size),
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.ToTensor(),
+            ])
+        else:
+            train_transform = transforms.Compose([
+                transforms.Resize(config.data.image_size),
+                transforms.ToTensor(),
+            ])
+
+        test_transform = transforms.Compose([
+            transforms.Resize(config.data.image_size),
+            transforms.ToTensor(),
+        ])
+
+        dataset = PlantVillage(
+            root=data_root,
+            split='train',
+            transform=train_transform,
+            train_ratio=0.7,
+            val_ratio=0.15,
+            test_ratio=0.15,
+            seed=getattr(config.data, 'split_seed', 42)
+        )
+
+        test_dataset = PlantVillage(
+            root=data_root,
+            split='test',
+            transform=test_transform,
+            train_ratio=0.7,
+            val_ratio=0.15,
+            test_ratio=0.15,
+            seed=getattr(config.data, 'split_seed', 42)
+        )
+
     else:
         dataset, test_dataset = None, None
 

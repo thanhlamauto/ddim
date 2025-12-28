@@ -201,16 +201,23 @@ class Model(nn.Module):
         resolution = config.data.image_size
         resamp_with_conv = config.model.resamp_with_conv
         num_timesteps = config.diffusion.num_diffusion_timesteps
-        
+
         if config.model.type == 'bayesian':
             self.logvar = nn.Parameter(torch.zeros(num_timesteps))
-        
+
         self.ch = ch
         self.temb_ch = self.ch*4
         self.num_resolutions = len(ch_mult)
         self.num_res_blocks = num_res_blocks
         self.resolution = resolution
         self.in_channels = in_channels
+
+        # Check if model is conditional
+        self.conditional = getattr(config.model, 'conditional', False)
+        if self.conditional:
+            self.num_classes = getattr(config.model, 'num_classes', 10)
+            # Class embedding
+            self.label_emb = nn.Embedding(self.num_classes, self.temb_ch)
 
         # timestep embedding
         self.temb = nn.Module()
@@ -298,7 +305,7 @@ class Model(nn.Module):
                                         stride=1,
                                         padding=1)
 
-    def forward(self, x, t):
+    def forward(self, x, t, y=None):
         assert x.shape[2] == x.shape[3] == self.resolution
 
         # timestep embedding
@@ -306,6 +313,11 @@ class Model(nn.Module):
         temb = self.temb.dense[0](temb)
         temb = nonlinearity(temb)
         temb = self.temb.dense[1](temb)
+
+        # Add class embedding if conditional
+        if self.conditional:
+            assert y is not None, "Class labels must be provided for conditional model"
+            temb = temb + self.label_emb(y)
 
         # downsampling
         hs = [self.conv_in(x)]

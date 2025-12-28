@@ -17,6 +17,13 @@ from functions.ckpt_util import get_ckpt_path
 
 import torchvision.utils as tvu
 
+try:
+    import wandb
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+    logging.warning("wandb not installed. Wandb logging will be disabled.")
+
 
 def torch2hwcuint8(x, clip=False):
     if clip:
@@ -98,6 +105,26 @@ class Diffusion(object):
     def train(self):
         args, config = self.args, self.config
         tb_logger = self.config.tb_logger
+
+        # Initialize wandb if enabled
+        use_wandb = WANDB_AVAILABLE and getattr(config, 'wandb', None) and getattr(config.wandb, 'enabled', False)
+        if use_wandb:
+            wandb_project = getattr(config.wandb, 'project', 'ddim')
+            wandb_entity = getattr(config.wandb, 'entity', None)
+            wandb_name = getattr(config.wandb, 'name', None)
+            wandb_tags = getattr(config.wandb, 'tags', [])
+            wandb_notes = getattr(config.wandb, 'notes', '')
+
+            wandb.init(
+                project=wandb_project,
+                entity=wandb_entity,
+                name=wandb_name,
+                tags=wandb_tags,
+                notes=wandb_notes,
+                config=vars(config)
+            )
+            logging.info("Wandb initialized successfully")
+
         dataset, test_dataset = get_dataset(args, config)
         train_loader = data.DataLoader(
             dataset,
@@ -106,6 +133,11 @@ class Diffusion(object):
             num_workers=config.data.num_workers,
         )
         model = Model(config)
+
+        # Check if model is conditional
+        is_conditional = getattr(config.model, 'conditional', False)
+        if is_conditional:
+            logging.info(f"Training conditional model with {config.model.num_classes} classes")
 
         model = model.to(self.device)
         model = torch.nn.DataParallel(model)
@@ -144,17 +176,35 @@ class Diffusion(object):
                 e = torch.randn_like(x)
                 b = self.betas
 
+                # Move labels to device if conditional
+                if is_conditional:
+                    y = y.to(self.device)
+
                 # antithetic sampling
                 t = torch.randint(
                     low=0, high=self.num_timesteps, size=(n // 2 + 1,)
                 ).to(self.device)
                 t = torch.cat([t, self.num_timesteps - t - 1], dim=0)[:n]
-                loss = loss_registry[config.model.type](model, x, t, e, b)
+
+                # Pass labels to loss function if conditional
+                if is_conditional:
+                    loss = loss_registry[config.model.type](model, x, t, e, b, y)
+                else:
+                    loss = loss_registry[config.model.type](model, x, t, e, b)
 
                 tb_logger.add_scalar("loss", loss, global_step=step)
 
+                # Log to wandb
+                if use_wandb:
+                    wandb.log({
+                        "loss": loss.item(),
+                        "epoch": epoch,
+                        "step": step,
+                        "data_time": data_time / (i+1)
+                    }, step=step)
+
                 logging.info(
-                    f"step: {step}, loss: {loss.item()}, data time: {data_time / (i+1)}"
+                    f"epoch: {epoch}, step: {step}, loss: {loss.item()}, data time: {data_time / (i+1)}"
                 )
 
                 optimizer.zero_grad()
@@ -187,7 +237,15 @@ class Diffusion(object):
                     )
                     torch.save(states, os.path.join(self.args.log_path, "ckpt.pth"))
 
+                    # Save checkpoint to wandb
+                    if use_wandb:
+                        wandb.save(os.path.join(self.args.log_path, "ckpt.pth"))
+
                 data_start = time.time()
+
+        # Finish wandb run
+        if use_wandb:
+            wandb.finish()
 
     def sample(self):
         model = Model(self.config)
