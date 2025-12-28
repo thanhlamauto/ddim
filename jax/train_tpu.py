@@ -194,8 +194,24 @@ def save_image_grid(images, path, nrow=4):
 def main():
     # Setup
     config = get_config()
-    print(f"JAX devices: {jax.devices()}")
-    print(f"Num devices: {jax.device_count()}")
+
+    # Initialize JAX with retry for TPU lock issues
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            print(f"JAX devices: {jax.devices()}")
+            print(f"Num devices: {jax.device_count()}")
+            break
+        except RuntimeError as e:
+            if "Device or resource busy" in str(e) and attempt < max_retries - 1:
+                print(f"TPU busy, retrying in 5 seconds... (attempt {attempt + 1}/{max_retries})")
+                import time
+                time.sleep(5)
+            else:
+                print(f"\nERROR: TPU initialization failed after {max_retries} attempts.")
+                print("Please RESTART the Kaggle kernel and try again.")
+                print("In Kaggle: Click 'Restart Session' button or Kernel → Restart")
+                raise
 
     num_devices = jax.device_count()
     config.training.num_devices = num_devices
