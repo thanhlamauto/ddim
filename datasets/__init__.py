@@ -6,6 +6,8 @@ import torchvision.transforms.functional as F
 from torchvision.datasets import CIFAR10
 from datasets.celeba import CelebA
 from datasets.plantvillage import PlantVillage
+from datasets.potato_single import PotatoLateBlight
+from datasets.plantvillage_latent import PlantVillageLatent
 from torch.utils.data import Subset
 import numpy as np
 

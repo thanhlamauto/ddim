@@ -1,0 +1,77 @@
+data:
+    dataset: "PotatoLateBlight"
+    data_root: "/workspace/PlantVillage/Potato___Late_blight"
+    image_size: 256  # Original image size
+    latent_size: 32  # 256 / 8 = 32 (VAE downscale factor)
+    channels: 4      # Latent channels from VAE
+    logit_transform: false
+    uniform_dequantization: false
+    gaussian_dequantization: false
+    random_flip: true
+    rescaled: true
+    num_workers: 4
+    split_seed: 42
+    train_ratio: 0.8
+    val_ratio: 0.1
+    test_ratio: 0.1
+
+model:
+    type: "simple"
+    in_channels: 4   # Latent channels
+    out_ch: 4
+    ch: 128
+    ch_mult: [1, 2, 2, 4]  # Smaller model for small dataset
+    num_res_blocks: 2
+    attn_resolutions: [8, 16]  # Attention at 8x8 and 16x16
+    dropout: 0.0  # No dropout for small dataset
+    var_type: fixedlarge
+    ema_rate: 0.9999
+    ema: true
+    resamp_with_conv: true
+    conditional: false  # Unconditional
+
+diffusion:
+    beta_schedule: linear
+    beta_start: 0.0001
+    beta_end: 0.02
+    num_diffusion_timesteps: 1000
+
+training:
+    batch_size: 16
+    n_epochs: 100
+    n_iters: 100000
+    snapshot_freq: 1000   # Save checkpoint every 1000 steps (5 times total)
+    validation_freq: 1000 # Eval FID every 1000 steps
+
+sampling:
+    batch_size: 16
+    last_only: true
+    num_inference_steps: 100  # As requested
+
+optim:
+    weight_decay: 0.0
+    optimizer: "AdamW"
+    lr: 0.0002  # Increased for faster convergence
+    beta1: 0.9
+    amsgrad: false
+    eps: 0.00000001
+    grad_clip: 1.0
+
+# VAE settings
+vae:
+    model_id: "stabilityai/sd-vae-ft-mse"
+    # Alternative: "stabilityai/sd-vae-ft-ema"
+
+# FID settings
+fid:
+    num_samples: 100  # Number of samples to generate for FID
+    real_stats_path: null  # Will be computed on first run
+
+# Wandb settings
+wandb:
+    enabled: true
+    project: "ddim-potato-lateblight"
+    entity: null
+    name: "unconditional-latent-256"
+    tags: ["potato", "latent", "unconditional", "256x256"]
+    notes: "Unconditional latent diffusion on Potato Late Blight 256x256"

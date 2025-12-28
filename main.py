@@ -10,6 +10,8 @@ import numpy as np
 import torch.utils.tensorboard as tb
 
 from runners.diffusion import Diffusion
+from runners.latent_diffusion import LatentDiffusion
+from runners.latent_diffusion_cond import LatentDiffusionCond
 
 torch.set_printoptions(sci_mode=False)
 
@@ -86,6 +88,16 @@ def parse_args_and_config():
         help="eta used to control the variances of sigma",
     )
     parser.add_argument("--sequence", action="store_true")
+    parser.add_argument(
+        "--latent",
+        action="store_true",
+        help="Use latent diffusion with VAE",
+    )
+    parser.add_argument(
+        "--latent_cond",
+        action="store_true",
+        help="Use class-conditional latent diffusion with CFG",
+    )
 
     args = parser.parse_args()
     args.log_path = os.path.join(args.exp, "logs", args.doc)
@@ -215,7 +227,14 @@ def main():
     logging.info("Exp comment = {}".format(args.comment))
 
     try:
-        runner = Diffusion(args, config)
+        # Choose runner based on flags
+        if args.latent_cond:
+            runner = LatentDiffusionCond(args, config)
+        elif args.latent:
+            runner = LatentDiffusion(args, config)
+        else:
+            runner = Diffusion(args, config)
+
         if args.sample:
             runner.sample()
         elif args.test:

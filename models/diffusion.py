@@ -216,8 +216,8 @@ class Model(nn.Module):
         self.conditional = getattr(config.model, 'conditional', False)
         if self.conditional:
             self.num_classes = getattr(config.model, 'num_classes', 10)
-            # Class embedding
-            self.label_emb = nn.Embedding(self.num_classes, self.temb_ch)
+            # Class embedding (+1 for null class used in CFG)
+            self.label_emb = nn.Embedding(self.num_classes + 1, self.temb_ch)
 
         # timestep embedding
         self.temb = nn.Module()

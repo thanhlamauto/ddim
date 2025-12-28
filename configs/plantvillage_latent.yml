@@ -1,0 +1,89 @@
+data:
+    dataset: "PlantVillageLatent"
+    data_root: "/workspace/PlantVillage"
+    image_size: 256
+    latent_size: 32  # 256/8
+    channels: 4
+    random_flip: true
+    random_crop: true  # Random crop thay vì center
+    color_jitter: true  # Nhẹ: brightness/contrast/saturation
+    color_jitter_strength: 0.1
+    rescaled: true
+    num_workers: 8
+    split_seed: 42
+    train_ratio: 0.85
+    val_ratio: 0.075
+    test_ratio: 0.075
+    use_weighted_sampler: true  # Cân bằng class
+
+model:
+    type: "simple"
+    in_channels: 4
+    out_ch: 4
+    ch: 128  # Base channels
+    ch_mult: [1, 2, 2, 4]
+    num_res_blocks: 2
+    attn_resolutions: [16, 32]  # Attention ở 16x16 và 32x32
+    dropout: 0.0
+    var_type: fixedlarge
+    ema_rate: 0.9999
+    ema: true
+    resamp_with_conv: true
+    # Class conditioning
+    conditional: true
+    num_classes: 15  # PlantVillage classes
+    class_dropout: 0.1  # 10% dropout for CFG
+
+diffusion:
+    beta_schedule: cosine  # Cosine schedule
+    beta_start: 0.0001
+    beta_end: 0.02
+    num_diffusion_timesteps: 1000
+    prediction_type: "epsilon"  # hoặc "v_prediction"
+
+training:
+    batch_size: 64  # Với 4090 24GB
+    n_epochs: 10000  # Không giới hạn epochs
+    n_iters: 200000  # 200k steps - điểm ngọt
+    snapshot_freq: 25000  # Save mỗi 25k steps (8 lần total)
+    validation_freq: 25000
+    log_freq: 100
+    sample_freq: 10000  # Gen samples mỗi 10k steps
+    warmup_steps: 2000
+
+sampling:
+    batch_size: 16
+    last_only: true
+    num_inference_steps: 50  # DDIM steps
+    cfg_scale: 3.0  # Classifier-free guidance
+
+optim:
+    weight_decay: 0.01  # AdamW weight decay
+    optimizer: "AdamW"
+    lr: 0.0001  # 1e-4
+    beta1: 0.9
+    beta2: 0.999
+    amsgrad: false
+    eps: 0.00000001
+    grad_clip: 1.0
+
+# Mixed precision
+training_precision: "bf16"  # 4090 hỗ trợ bf16 tốt
+
+# VAE
+vae:
+    model_id: "stabilityai/sd-vae-ft-mse"
+
+# FID
+fid:
+    num_samples: 500
+    real_stats_path: null
+
+# Wandb
+wandb:
+    enabled: true
+    project: "ddim-plantvillage-full"
+    entity: null
+    name: "class-conditional-latent-256"
+    tags: ["plantvillage", "latent", "conditional", "256x256", "full-dataset"]
+    notes: "Class-conditional latent diffusion on full PlantVillage 256x256"
