@@ -39,11 +39,19 @@ except ImportError:
     print("wandb not available")
 
 try:
-    from utils.vae import create_vae
+    # Try simple VAE first (more compatible)
+    from utils.vae_simple import create_vae
     VAE_AVAILABLE = True
-except ImportError as e:
-    VAE_AVAILABLE = False
-    print(f"VAE not available - will train in pixel space. Error: {e}")
+    print("Using SimpleVAE (PyTorch-based)")
+except ImportError:
+    try:
+        # Fallback to Flax VAE
+        from utils.vae import create_vae
+        VAE_AVAILABLE = True
+        print("Using FlaxVAE")
+    except ImportError as e:
+        VAE_AVAILABLE = False
+        print(f"VAE not available - will train in pixel space. Error: {e}")
 
 
 class TrainState(train_state.TrainState):

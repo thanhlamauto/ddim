@@ -2,6 +2,16 @@
 
 import jax
 import jax.numpy as jnp
+
+# Monkey patch for huggingface_hub compatibility
+try:
+    from huggingface_hub import hf_hub_download
+    import huggingface_hub
+    if not hasattr(huggingface_hub, 'cached_download'):
+        huggingface_hub.cached_download = lambda *args, **kwargs: hf_hub_download(*args, **kwargs)
+except ImportError:
+    pass
+
 from diffusers import FlaxAutoencoderKL
 
 
