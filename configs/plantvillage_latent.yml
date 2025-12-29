@@ -42,7 +42,7 @@ diffusion:
     prediction_type: "epsilon"  # hoặc "v_prediction"
 
 training:
-    batch_size: 64  # Với 4090 24GB
+    batch_size: 256  # Với 4090 24GB
     n_epochs: 10000  # Không giới hạn epochs
     n_iters: 200000  # 200k steps - điểm ngọt
     snapshot_freq: 25000  # Save mỗi 25k steps (8 lần total)
