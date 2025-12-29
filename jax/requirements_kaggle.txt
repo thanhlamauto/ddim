@@ -1,8 +1,9 @@
 # JAX and Flax for TPU
-# Kaggle TPU v5e uses JAX 0.4.x
-jax[tpu]==0.4.23
-flax==0.8.0
-optax==0.1.9
+# Use compatible versions for Kaggle TPU
+# Note: Kaggle may have pre-installed JAX, check version first
+jax[tpu]>=0.4.20,<0.4.30
+flax>=0.7.5,<0.9.0
+optax>=0.1.7,<0.2.0
 
 # Diffusers for VAE
 diffusers==0.25.1

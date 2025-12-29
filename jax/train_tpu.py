@@ -10,10 +10,23 @@ import os
 os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 os.environ['JAX_PLATFORMS'] = 'tpu'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
+
+# Fix compatibility issues before importing JAX/Flax
+try:
+    from fix_kaggle_imports import fix_jax_imports
+    fix_jax_imports()
+except ImportError:
+    pass  # fix_kaggle_imports.py not found, continue anyway
 
 import argparse
 import functools
 from typing import Any
+import warnings
+
+# Suppress fork warnings
+warnings.filterwarnings('ignore', category=RuntimeWarning, message='.*os.fork.*')
+warnings.filterwarnings('ignore', category=UserWarning, message='.*hugepages.*')
 
 import jax
 import jax.numpy as jnp
