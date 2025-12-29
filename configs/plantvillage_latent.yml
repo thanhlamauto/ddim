@@ -9,7 +9,7 @@ data:
     color_jitter: true  # Nhẹ: brightness/contrast/saturation
     color_jitter_strength: 0.1
     rescaled: true
-    num_workers: 8
+    num_workers: 4  # Reduced to prevent /tmp multiprocessing issues
     split_seed: 42
     train_ratio: 0.85
     val_ratio: 0.075
@@ -74,9 +74,9 @@ training_precision: "bf16"  # 4090 hỗ trợ bf16 tốt
 vae:
     model_id: "stabilityai/sd-vae-ft-mse"
 
-# FID
+# FID (reduced to save disk space)
 fid:
-    num_samples: 500
+    num_samples: 100
     real_stats_path: null
 
 # Wandb

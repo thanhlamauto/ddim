@@ -310,8 +310,17 @@ class LatentDiffusionCond:
                 states = [model.state_dict(), optimizer.state_dict(), step]
                 if config.model.ema:
                     states.append(ema_helper.state_dict())
-                torch.save(states, os.path.join(args.log_path, f"ckpt_{step}.pth"))
+
+                # Only keep latest checkpoint to save disk space
                 torch.save(states, os.path.join(args.log_path, "ckpt.pth"))
+
+                # Delete old numbered checkpoints to save space
+                import glob
+                old_ckpts = glob.glob(os.path.join(args.log_path, "ckpt_*.pth"))
+                for old_ckpt in old_ckpts:
+                    if "best" not in old_ckpt:
+                        os.remove(old_ckpt)
+                        logging.info(f"Removed old checkpoint: {old_ckpt}")
 
                 # Eval FID
                 if config.model.ema:
