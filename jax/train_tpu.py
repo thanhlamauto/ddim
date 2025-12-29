@@ -2,12 +2,31 @@
 Class-conditional Latent Diffusion Training on TPU v5e-8.
 
 Usage:
-    python train_tpu.py
+    python train_tpu.py --config plantvillage_latent.yml
 """
 
 import os
+# CRITICAL: Set these BEFORE any other imports to avoid protobuf segfault
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
+os.environ['JAX_PLATFORMS'] = 'tpu'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
+
+# Fix compatibility issues before importing JAX/Flax
+try:
+    from fix_kaggle_imports import fix_jax_imports
+    fix_jax_imports()
+except ImportError:
+    pass  # fix_kaggle_imports.py not found, continue anyway
+
+import argparse
 import functools
 from typing import Any
+import warnings
+
+# Suppress fork warnings
+warnings.filterwarnings('ignore', category=RuntimeWarning, message='.*os.fork.*')
+warnings.filterwarnings('ignore', category=UserWarning, message='.*hugepages.*')
 
 import jax
 import jax.numpy as jnp
@@ -36,9 +55,24 @@ except ImportError:
 try:
     from utils.vae import create_vae
     VAE_AVAILABLE = True
-except ImportError:
+    print("Using FlaxVAE")
+except ImportError as e:
     VAE_AVAILABLE = False
-    print("VAE not available - will train in pixel space")
+    print(f"VAE not available - will train in pixel space. Error: {e}")
+
+try:
+    from utils.fid import (
+        get_fid_network,
+        compute_statistics_from_activations,
+        fid_from_stats,
+        preprocess_images_for_fid,
+        save_fid_stats,
+        load_fid_stats,
+    )
+    FID_AVAILABLE = True
+except ImportError as e:
+    FID_AVAILABLE = False
+    print(f"FID utils not available: {e}")
 
 
 class TrainState(train_state.TrainState):
@@ -55,16 +89,22 @@ def create_train_state(rng, config: Config, model: nn.Module) -> TrainState:
 
     params = model.init(rng, dummy_x, dummy_t, dummy_y, train=False)['params']
 
-    # Optimizer with warmup
+    # Optimizer with warmup (use optim.lr instead of training.learning_rate)
     schedule = optax.warmup_constant_schedule(
         init_value=0.0,
-        peak_value=config.training.learning_rate,
+        peak_value=config.optim.lr,
         warmup_steps=config.training.warmup_steps,
     )
 
     optimizer = optax.chain(
-        optax.clip_by_global_norm(config.training.grad_clip),
-        optax.adamw(schedule, weight_decay=config.training.weight_decay),
+        optax.clip_by_global_norm(config.optim.grad_clip),
+        optax.adamw(
+            schedule,
+            weight_decay=config.optim.weight_decay,
+            b1=config.optim.beta1,
+            b2=config.optim.beta2,
+            eps=config.optim.eps,
+        ),
     )
 
     return TrainState.create(
@@ -83,6 +123,24 @@ def update_ema(state: TrainState, ema_decay: float) -> TrainState:
         state.params,
     )
     return state.replace(ema_params=new_ema)
+
+
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="plantvillage_latent.yml",
+        help="Config file name (in configs/ directory) or path",
+    )
+    parser.add_argument(
+        "--doc",
+        type=str,
+        default="plantvillage_tpu",
+        help="Experiment name for logging",
+    )
+    return parser.parse_args()
 
 
 @functools.partial(jax.pmap, axis_name='batch', donate_argnums=(0,))
@@ -132,18 +190,35 @@ def encode_batch(vae, images):
         return jax.image.resize(images, images.shape[:-1] + (4,), method='bilinear')
 
 
-def generate_samples(state, vae, diffusion_params, config, rng, num_samples=16):
-    """Generate sample images."""
+def generate_samples(state, vae, diffusion_params, config, rng, num_samples=16, classes=None):
+    """Generate sample images.
+
+    Args:
+        state: Training state
+        vae: VAE model
+        diffusion_params: Diffusion parameters
+        config: Config object
+        rng: JAX random key
+        num_samples: Number of samples to generate
+        classes: Optional class labels, otherwise random
+
+    Returns:
+        images: Generated images in [0, 1] range
+    """
     # Random latents
     z = jax.random.normal(rng, (num_samples, config.data.latent_size,
                                  config.data.latent_size, config.data.channels))
 
-    # Random classes (one per class for visualization)
-    y = jnp.arange(min(num_samples, config.data.num_classes)) % config.data.num_classes
+    # Class labels
+    if classes is None:
+        # Random classes (one per class for visualization)
+        y = jnp.arange(min(num_samples, config.data.num_classes)) % config.data.num_classes
 
-    # Pad if needed
-    if len(y) < num_samples:
-        y = jnp.concatenate([y, jnp.zeros(num_samples - len(y), dtype=jnp.int32)])
+        # Pad if needed
+        if len(y) < num_samples:
+            y = jnp.concatenate([y, jnp.zeros(num_samples - len(y), dtype=jnp.int32)])
+    else:
+        y = classes
 
     # Model function for sampling
     def model_fn(params, z, t, y, train=False):
@@ -156,7 +231,7 @@ def generate_samples(state, vae, diffusion_params, config, rng, num_samples=16):
         z=z,
         y=y,
         diffusion_params=diffusion_params,
-        num_steps=config.sampling.num_steps,
+        num_steps=config.sampling.num_inference_steps,
         cfg_scale=config.sampling.cfg_scale,
         num_classes=config.data.num_classes,
     )
@@ -168,6 +243,72 @@ def generate_samples(state, vae, diffusion_params, config, rng, num_samples=16):
         images = z[..., :3]  # Fallback
 
     return images
+
+
+def compute_fid(state, vae, diffusion_params, config, rng, real_stats_path, num_samples=500, batch_size=64):
+    """Compute FID score.
+
+    Args:
+        state: Training state
+        vae: VAE model
+        diffusion_params: Diffusion parameters
+        config: Config object
+        rng: JAX random key
+        real_stats_path: Path to real FID stats
+        num_samples: Number of samples to generate
+        batch_size: Batch size for generation
+
+    Returns:
+        fid_score: FID value
+    """
+    if not FID_AVAILABLE:
+        print("FID not available, returning 0")
+        return 0.0
+
+    print(f"Generating {num_samples} samples for FID...")
+
+    # Load real stats
+    mu_real, sigma_real = load_fid_stats(real_stats_path)
+
+    # Get InceptionV3 model
+    get_activations = get_fid_network()
+
+    # Generate samples and collect activations
+    all_activations = []
+    num_batches = (num_samples + batch_size - 1) // batch_size
+
+    for i in range(num_batches):
+        current_batch_size = min(batch_size, num_samples - i * batch_size)
+
+        # Generate random classes for this batch
+        rng, gen_rng = jax.random.split(rng)
+        classes = jax.random.randint(gen_rng, (current_batch_size,), 0, config.data.num_classes)
+
+        # Generate images
+        rng, sample_rng = jax.random.split(rng)
+        images = generate_samples(
+            state, vae, diffusion_params, config, sample_rng,
+            num_samples=current_batch_size,
+            classes=classes
+        )
+
+        # Preprocess for InceptionV3
+        images_processed = preprocess_images_for_fid(images)
+
+        # Get activations
+        acts = get_activations(images_processed)
+        all_activations.append(np.array(acts))
+
+        print(f"Generated {(i+1)*batch_size}/{num_samples} samples...")
+
+    # Compute statistics
+    all_activations = np.concatenate(all_activations, axis=0)[:num_samples]
+    mu_fake, sigma_fake = compute_statistics_from_activations(all_activations)
+
+    # Compute FID
+    fid_score = fid_from_stats(mu_fake, sigma_fake, mu_real, sigma_real)
+
+    return fid_score
 
 
 def save_image_grid(images, path, nrow=4):
@@ -186,37 +327,136 @@ def save_image_grid(images, path, nrow=4):
     Image.fromarray(grid).save(path)
 
 
+def compute_real_fid_stats(config, num_samples=500):
+    """Compute and save FID statistics for real images.
+
+    Args:
+        config: Config object
+        num_samples: Number of real images to use
+
+    Returns:
+        stats_path: Path to saved FID stats
+    """
+    if not FID_AVAILABLE:
+        print("FID not available, skipping real stats computation")
+        return None
+
+    stats_path = os.path.join(config.log_path, "real_fid_stats.npz")
+
+    # Check if already computed
+    if os.path.exists(stats_path):
+        print(f"FID stats already exist at {stats_path}")
+        return stats_path
+
+    print(f"Computing FID stats from {num_samples} real images...")
+
+    # Load val dataset
+    val_ds, val_num_samples, _ = get_plantvillage_dataset(
+        data_root=config.data.data_root,
+        split='val',
+        image_size=config.data.image_size,
+        batch_size=min(64, num_samples),
+        num_devices=1,
+        train_ratio=config.data.train_ratio,
+        val_ratio=config.data.val_ratio,
+        seed=config.data.split_seed,
+        random_crop=False,
+        random_flip=False,
+        color_jitter=False,
+    )
+
+    # Get InceptionV3 model
+    get_activations = get_fid_network()
+
+    # Collect activations
+    all_activations = []
+    collected = 0
+
+    for batch in val_ds.take(num_samples // 64 + 1):
+        if collected >= num_samples:
+            break
+
+        images, _ = batch
+        images = jnp.array(images.numpy())
+
+        # Preprocess for InceptionV3
+        images_processed = preprocess_images_for_fid(images)
+
+        # Get activations
+        acts = get_activations(images_processed)
+        all_activations.append(np.array(acts))
+
+        collected += images.shape[0]
+        print(f"Processed {collected}/{num_samples} real images...")
+
+    # Concatenate and compute stats
+    all_activations = np.concatenate(all_activations, axis=0)[:num_samples]
+    save_fid_stats(all_activations, stats_path)
+
+    return stats_path
+
+
 def main():
-    # Setup
-    config = get_config()
-    print(f"JAX devices: {jax.devices()}")
-    print(f"Num devices: {jax.device_count()}")
+    # Parse arguments
+    args = parse_args()
+
+    # Load config from YAML
+    config = get_config(args.config)
+
+    # Override paths for TPU/Kaggle
+    config.log_path = os.path.join("/kaggle/working/logs", args.doc)
+    config.checkpoint_dir = os.path.join(config.log_path, "checkpoints")
+    config.samples_dir = os.path.join(config.log_path, "samples")
+
+    # Create directories
+    os.makedirs(config.checkpoint_dir, exist_ok=True)
+    os.makedirs(config.samples_dir, exist_ok=True)
+    os.makedirs(config.log_path, exist_ok=True)
+
+    # Initialize JAX with retry for TPU lock issues
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            print(f"JAX devices: {jax.devices()}")
+            print(f"Num devices: {jax.device_count()}")
+            break
+        except RuntimeError as e:
+            if "Device or resource busy" in str(e) and attempt < max_retries - 1:
+                print(f"TPU busy, retrying in 5 seconds... (attempt {attempt + 1}/{max_retries})")
+                import time
+                time.sleep(5)
+            else:
+                print(f"\nERROR: TPU initialization failed after {max_retries} attempts.")
+                print("Please RESTART the Kaggle kernel and try again.")
+                print("In Kaggle: Click 'Restart Session' button or Kernel → Restart")
+                raise
 
     num_devices = jax.device_count()
     config.training.num_devices = num_devices
 
     # Wandb
-    use_wandb = WANDB_AVAILABLE
+    use_wandb = WANDB_AVAILABLE and config.wandb.enabled
     if use_wandb:
         try:
             wandb.init(
-                project=config.wandb_project,
-                name=config.wandb_name,
+                project=config.wandb.project,
+                name=config.wandb.name,
+                entity=config.wandb.entity,
+                tags=list(config.wandb.tags) if config.wandb.tags else None,
+                notes=config.wandb.notes,
                 config={
                     'batch_size': config.training.batch_size,
-                    'num_steps': config.training.num_steps,
-                    'learning_rate': config.training.learning_rate,
+                    'n_iters': config.training.n_iters,
+                    'lr': config.optim.lr,
                     'num_classes': config.data.num_classes,
                     'num_devices': num_devices,
+                    'ema_rate': config.model.ema_rate,
                 }
             )
+            print("Wandb initialized")
         except Exception as e:
             print(f"Wandb init failed: {e}")
             use_wandb = False
-
-    # Create directories
-    os.makedirs(config.checkpoint_dir, exist_ok=True)
-    os.makedirs(config.samples_dir, exist_ok=True)
 
     # Dataset
     train_ds, num_samples, num_classes = get_plantvillage_dataset(
@@ -236,21 +476,30 @@ def main():
     config.data.num_classes = num_classes
     print(f"Dataset: {num_samples} samples, {num_classes} classes")
 
+    # Compute FID stats for real images (do this once at start)
+    print("\nComputing FID stats for real images...")
+    real_fid_stats_path = compute_real_fid_stats(config, num_samples=config.fid.num_samples)
+
     # VAE
     vae = None
     if VAE_AVAILABLE:
         try:
-            vae = create_vae(config.vae_model_id)
-            print("VAE loaded successfully")
+            print(f"Loading VAE from {config.vae.model_id}...")
+            vae = create_vae(config.vae.model_id)
+            print("VAE loaded successfully!")
+            print(f"VAE will compress {config.data.image_size}x{config.data.image_size} images to {config.data.latent_size}x{config.data.latent_size} latents")
         except Exception as e:
-            print(f"Failed to load VAE: {e}")
+            print(f"Failed to load VAE: {type(e).__name__}: {e}")
+            print("Training will continue in pixel space (slower, requires more memory)")
+            import traceback
+            traceback.print_exc()
 
     # Diffusion params
     if config.diffusion.beta_schedule == "cosine":
-        betas = cosine_beta_schedule(config.diffusion.num_timesteps)
+        betas = cosine_beta_schedule(config.diffusion.num_diffusion_timesteps)
     else:
         betas = linear_beta_schedule(
-            config.diffusion.num_timesteps,
+            config.diffusion.num_diffusion_timesteps,
             config.diffusion.beta_start,
             config.diffusion.beta_end,
         )
@@ -294,18 +543,18 @@ def main():
     config_dict = {
         'class_dropout': config.model.class_dropout,
         'num_classes': num_classes,
-        'num_timesteps': config.diffusion.num_timesteps,
+        'num_timesteps': config.diffusion.num_diffusion_timesteps,
     }
     config_dict_rep = flax.jax_utils.replicate(config_dict)
 
     # Training loop
-    print(f"\nStarting training for {config.training.num_steps} steps...")
+    print(f"\nStarting training for {config.training.n_iters} steps...")
     print(f"Batch size: {config.training.batch_size} (global), {config.training.batch_size // num_devices} (per device)")
 
     step = latest_step or 0
     train_iter = iter(train_ds)
 
-    while step < config.training.num_steps:
+    while step < config.training.n_iters:
         # Get batch
         try:
             batch = next(train_iter)
@@ -335,7 +584,7 @@ def main():
         noise = jax.random.normal(noise_rng, latents.shape)
         timesteps = jax.random.randint(
             t_rng, (num_devices, latents.shape[1]),
-            0, config.diffusion.num_timesteps
+            0, config.diffusion.num_diffusion_timesteps
         )
 
         # Split RNG for each device
@@ -376,13 +625,51 @@ def main():
             if use_wandb:
                 wandb.log({"samples": wandb.Image(save_path)}, step=step)
 
+        # Validation (sample generation + FID)
+        if step % config.training.validation_freq == 0 and step > 0:
+            print(f"Step {step}: Running validation...")
+            rng, val_rng = jax.random.split(rng)
+
+            # Unreplicate for sampling
+            state_single = flax.jax_utils.unreplicate(state)
+
+            # Generate validation samples (more than training samples)
+            val_samples = generate_samples(
+                state_single, vae, diffusion_params, config, val_rng, num_samples=min(num_classes, 16)
+            )
+
+            # Save validation samples
+            val_path = os.path.join(config.samples_dir, f"validation_step_{step}.png")
+            save_image_grid(val_samples, val_path)
+            print(f"Saved validation samples to {val_path}")
+
+            if use_wandb:
+                wandb.log({"validation_samples": wandb.Image(val_path)}, step=step)
+
+            # Compute FID if stats are available
+            if FID_AVAILABLE and real_fid_stats_path is not None:
+                print(f"Step {step}: Computing FID...")
+                rng, fid_rng = jax.random.split(rng)
+                fid_score = compute_fid(
+                    state_single, vae, diffusion_params, config, fid_rng,
+                    real_fid_stats_path,
+                    num_samples=config.fid.num_samples,
+                    batch_size=64
+                )
+                print(f"Step {step}: FID = {fid_score:.2f}")
+
+                if use_wandb:
+                    wandb.log({"fid": fid_score}, step=step)
+            else:
+                print(f"Step {step}: FID calculation skipped (not available)")
+
         # Save checkpoint
         if step % config.training.snapshot_freq == 0:
             print(f"Step {step}: Saving checkpoint...")
             state_single = flax.jax_utils.unreplicate(state)
 
             # Update EMA before saving
-            state_single = update_ema(state_single, config.training.ema_decay)
+            state_single = update_ema(state_single, config.model.ema_rate)
 
             ckpt_manager.save(step, state_single)
 
