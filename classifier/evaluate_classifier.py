@@ -85,6 +85,12 @@ def main():
                         help='Number of data loading workers')
     parser.add_argument('--seed', type=int, default=42,
                         help='Random seed')
+    parser.add_argument('--train_ratio', type=float, default=0.70,
+                        help='Training set ratio (must match training)')
+    parser.add_argument('--val_ratio', type=float, default=0.15,
+                        help='Validation set ratio (must match training)')
+    parser.add_argument('--test_ratio', type=float, default=0.15,
+                        help='Test set ratio (must match training)')
     args = parser.parse_args()
 
     # Create output directory
@@ -96,15 +102,17 @@ def main():
 
     # Create test dataset (always from real data)
     print(f"\nCreating test dataset from real data...")
+    print(f"Using split ratios: Train={args.train_ratio:.1%}, Val={args.val_ratio:.1%}, Test={args.test_ratio:.1%}")
+
     test_dataset = BalancedPlantVillageDataset(
         root=args.data_root,
         split='test',
         scenario='real_only',  # Always test on real data
         synth_root=None,
         transform=get_transforms('test'),
-        train_ratio=0.85,
-        val_ratio=0.075,
-        test_ratio=0.075,
+        train_ratio=args.train_ratio,
+        val_ratio=args.val_ratio,
+        test_ratio=args.test_ratio,
         seed=args.seed
     )
 

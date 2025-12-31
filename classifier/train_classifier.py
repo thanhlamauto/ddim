@@ -90,7 +90,7 @@ def main():
                         help='Directory to save checkpoints and logs')
     parser.add_argument('--batch_size', type=int, default=128,
                         help='Batch size for training')
-    parser.add_argument('--epochs', type=int, default=100,
+    parser.add_argument('--epochs', type=int, default=50,
                         help='Number of training epochs')
     parser.add_argument('--lr', type=float, default=0.1,
                         help='Initial learning rate')
@@ -104,6 +104,12 @@ def main():
                         help='Target number of images per class for balancing')
     parser.add_argument('--seed', type=int, default=42,
                         help='Random seed')
+    parser.add_argument('--train_ratio', type=float, default=0.70,
+                        help='Training set ratio (default: 0.70)')
+    parser.add_argument('--val_ratio', type=float, default=0.15,
+                        help='Validation set ratio (default: 0.15)')
+    parser.add_argument('--test_ratio', type=float, default=0.15,
+                        help='Test set ratio (default: 0.15)')
     args = parser.parse_args()
 
     # Create output directory
@@ -125,6 +131,8 @@ def main():
 
     # Create datasets
     print(f"\nCreating datasets for scenario: {args.scenario}")
+    print(f"Split ratios: Train={args.train_ratio:.1%}, Val={args.val_ratio:.1%}, Test={args.test_ratio:.1%}")
+
     train_dataset = BalancedPlantVillageDataset(
         root=args.data_root,
         split='train',
@@ -132,9 +140,9 @@ def main():
         synth_root=args.synth_root,
         target_count=args.target_count,
         transform=get_transforms('train'),
-        train_ratio=0.85,
-        val_ratio=0.075,
-        test_ratio=0.075,
+        train_ratio=args.train_ratio,
+        val_ratio=args.val_ratio,
+        test_ratio=args.test_ratio,
         seed=args.seed
     )
 
@@ -145,9 +153,9 @@ def main():
         synth_root=args.synth_root,
         target_count=args.target_count,
         transform=get_transforms('val'),
-        train_ratio=0.85,
-        val_ratio=0.075,
-        test_ratio=0.075,
+        train_ratio=args.train_ratio,
+        val_ratio=args.val_ratio,
+        test_ratio=args.test_ratio,
         seed=args.seed
     )
 

@@ -100,7 +100,7 @@ class BalancedPlantVillageDataset(Dataset):
                 continue
 
             class_idx = self.class_to_idx[class_name]
-            images = [f for f in os.listdir(class_dir) if f.endswith(('.jpg', '.png', '.jpeg'))]
+            images = [f for f in os.listdir(class_dir) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
 
             # Split into train/val/test
             selected_indices = self._get_split_indices(len(images), 0.85, 0.075, 0.075)
@@ -120,7 +120,7 @@ class BalancedPlantVillageDataset(Dataset):
             class_dir = os.path.join(self.root, class_name)
             class_idx = self.class_to_idx[class_name]
 
-            images = [f for f in os.listdir(class_dir) if f.endswith(('.jpg', '.png', '.jpeg'))]
+            images = [f for f in os.listdir(class_dir) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
             for img_name in images:
                 img_path = os.path.join(class_dir, img_name)
                 all_samples.append((img_path, class_idx))
@@ -143,7 +143,7 @@ class BalancedPlantVillageDataset(Dataset):
             class_dir = os.path.join(self.root, class_name)
             class_idx = self.class_to_idx[class_name]
 
-            images = [f for f in os.listdir(class_dir) if f.endswith(('.jpg', '.png', '.jpeg'))]
+            images = [f for f in os.listdir(class_dir) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
             n_images = len(images)
 
             # Downsample if too many
@@ -186,7 +186,7 @@ class BalancedPlantVillageDataset(Dataset):
             # Get real images
             real_images = [os.path.join(real_class_dir, f)
                            for f in os.listdir(real_class_dir)
-                           if f.endswith(('.jpg', '.png', '.jpeg'))]
+                           if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
             n_real = len(real_images)
 
             class_images = []
@@ -203,7 +203,7 @@ class BalancedPlantVillageDataset(Dataset):
                 if os.path.exists(synth_class_dir):
                     synth_images = [os.path.join(synth_class_dir, f)
                                     for f in os.listdir(synth_class_dir)
-                                    if f.endswith(('.jpg', '.png', '.jpeg'))]
+                                    if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
                     n_needed = self.target_count - n_real
                     random.seed(self.seed)
                     class_images.extend(random.sample(synth_images, min(n_needed, len(synth_images))))
