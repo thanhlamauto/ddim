@@ -127,10 +127,28 @@ class PlantVillageLatent(Dataset):
         return transforms.Compose(transform_list)
 
     def __getitem__(self, idx):
-        img_path, cls_idx = self.samples[idx]
-        img = Image.open(img_path).convert('RGB')
-        img = self.transform(img)
-        return img, cls_idx
+        """Get item with error handling for corrupted images."""
+        max_attempts = 10
+        for attempt in range(max_attempts):
+            try:
+                img_path, cls_idx = self.samples[idx]
+                img = Image.open(img_path).convert('RGB')
+
+                # Verify image can be loaded (triggers lazy loading)
+                img.load()
+
+                img = self.transform(img)
+                return img, cls_idx
+
+            except (OSError, IOError, Image.UnidentifiedImageError) as e:
+                if attempt == 0:  # Only log once per corrupted image
+                    print(f"Warning: Corrupted image {img_path}, trying next image...")
+
+                # Try next sample
+                idx = (idx + 1) % len(self.samples)
+
+        # If all attempts failed, raise error
+        raise RuntimeError(f"Failed to load valid image after {max_attempts} attempts")
 
     def __len__(self):
         return len(self.samples)

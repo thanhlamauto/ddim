@@ -1,0 +1,87 @@
+INFO - plantdoc_diffusion.py - 2025-12-30 03:25:23,245 - Wandb initialized
+PlantDoc train: 2668 images, 27 classes
+  Augmentation probability: 25.0%
+  Top 5 classes: {23: 223, 12: 200, 8: 182, 11: 157, 18: 145}
+  Bottom 5 classes: {3: 34, 19: 44, 22: 44, 6: 47, 14: 57}
+PlantDoc test: 252 images, 27 classes
+  Augmentation probability: 0.0%
+  Top 5 classes: {23: 15, 11: 14, 8: 12, 18: 12, 25: 12}
+  Bottom 5 classes: {7: 4, 15: 6, 24: 6, 13: 7, 3: 8}
+INFO - plantdoc_diffusion.py - 2025-12-30 03:25:40,815 - Saved 252 real images for test
+INFO - plantdoc_diffusion.py - 2025-12-30 03:25:41,359 - ================================================================================
+INFO - plantdoc_diffusion.py - 2025-12-30 03:25:41,360 - Training PlantDoc: 2668 samples, 28 classes
+INFO - plantdoc_diffusion.py - 2025-12-30 03:25:41,360 - Batch: 32, Steps: 150000
+INFO - plantdoc_diffusion.py - 2025-12-30 03:25:41,361 - Diffusion timesteps: 100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:25:41,361 - Augmentation prob: 25.0%
+INFO - plantdoc_diffusion.py - 2025-12-30 03:25:41,361 - Class dropout (CFG): 10.0%
+INFO - plantdoc_diffusion.py - 2025-12-30 03:25:41,361 - AMP: True (torch.bfloat16)
+INFO - plantdoc_diffusion.py - 2025-12-30 03:25:41,361 - Weighted sampler: True
+INFO - plantdoc_diffusion.py - 2025-12-30 03:25:41,361 - ================================================================================
+INFO - plantdoc_diffusion.py - 2025-12-30 03:26:54,786 - Step 100/150000, Loss: 0.6484, LR: 0.000010
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:35,064 - Step 200/150000, Loss: 0.3694, LR: 0.000020
+INFO - plantdoc_diffusion.py - 2025-12-30 03:28:14,554 - Step 300/150000, Loss: 0.4288, LR: 0.000030
+INFO - plantdoc_diffusion.py - 2025-12-30 03:29:16,417 - Step 400/150000, Loss: 0.4114, LR: 0.000040
+INFO - plantdoc_diffusion.py - 2025-12-30 03:30:14,598 - Step 500/150000, Loss: 0.3273, LR: 0.000050
+INFO - plantdoc_diffusion.py - 2025-12-30 03:30:49,008 - Step 600/150000, Loss: 0.3889, LR: 0.000060
+INFO - plantdoc_diffusion.py - 2025-12-30 03:31:22,466 - Step 700/150000, Loss: 0.2739, LR: 0.000070
+INFO - plantdoc_diffusion.py - 2025-12-30 03:31:56,848 - Step 800/150000, Loss: 0.3917, LR: 0.000080
+INFO - plantdoc_diffusion.py - 2025-12-30 03:32:31,907 - Step 900/150000, Loss: 0.3470, LR: 0.000090
+INFO - plantdoc_diffusion.py - 2025-12-30 03:33:07,569 - Step 1000/150000, Loss: 0.3988, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:33:41,698 - Step 1100/150000, Loss: 0.3279, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:34:16,098 - Step 1200/150000, Loss: 0.3384, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:34:50,068 - Step 1300/150000, Loss: 0.4196, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:35:23,723 - Step 1400/150000, Loss: 0.4043, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:35:58,868 - Step 1500/150000, Loss: 0.3234, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:36:32,928 - Step 1600/150000, Loss: 0.3576, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:37:06,902 - Step 1700/150000, Loss: 0.2165, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:37:41,636 - Step 1800/150000, Loss: 0.2297, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:38:15,851 - Step 1900/150000, Loss: 0.3947, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:38:51,736 - Step 2000/150000, Loss: 0.3619, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:39:26,318 - Step 2100/150000, Loss: 0.2150, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:40:00,553 - Step 2200/150000, Loss: 0.1982, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:40:34,803 - Step 2300/150000, Loss: 0.3579, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:41:08,904 - Step 2400/150000, Loss: 0.4431, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:41:44,406 - Step 2500/150000, Loss: 0.2885, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:42:19,339 - Step 2600/150000, Loss: 0.3177, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:42:53,881 - Step 2700/150000, Loss: 0.3325, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:43:28,135 - Step 2800/150000, Loss: 0.3636, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:44:02,050 - Step 2900/150000, Loss: 0.3433, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:44:37,491 - Step 3000/150000, Loss: 0.2788, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:45:11,573 - Step 3100/150000, Loss: 0.3893, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:45:46,193 - Step 3200/150000, Loss: 0.3383, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:46:19,188 - Step 3300/150000, Loss: 0.3877, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:46:53,248 - Step 3400/150000, Loss: 0.3234, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:47:28,402 - Step 3500/150000, Loss: 0.3962, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:48:02,563 - Step 3600/150000, Loss: 0.2660, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:48:35,362 - Step 3700/150000, Loss: 0.2007, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:49:09,380 - Step 3800/150000, Loss: 0.2920, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:49:44,505 - Step 3900/150000, Loss: 0.3658, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:50:19,620 - Step 4000/150000, Loss: 0.2244, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:50:54,066 - Step 4100/150000, Loss: 0.3075, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:51:34,113 - Step 4200/150000, Loss: 0.2645, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:52:09,632 - Step 4300/150000, Loss: 0.3275, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:53:13,022 - Step 4400/150000, Loss: 0.3205, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:54:15,215 - Step 4500/150000, Loss: 0.3565, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:55:17,961 - Step 4600/150000, Loss: 0.2731, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:56:19,948 - Step 4700/150000, Loss: 0.3367, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:57:21,197 - Step 4800/150000, Loss: 0.3524, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:58:25,067 - Step 4900/150000, Loss: 0.2551, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:59:27,413 - Step 5000/150000, Loss: 0.3529, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:59:40,288 - Generated samples for classes: Apple_Scab_Leaf, Apple_leaf, Apple_rust_leaf, Bell_pepper_leaf...
+INFO - plantdoc_diffusion.py - 2025-12-30 04:00:41,633 - Step 5100/150000, Loss: 0.3339, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:01:43,297 - Step 5200/150000, Loss: 0.2750, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:02:45,448 - Step 5300/150000, Loss: 0.3423, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:03:48,713 - Step 5400/150000, Loss: 0.2044, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:04:51,012 - Step 5500/150000, Loss: 0.3127, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:05:52,724 - Step 5600/150000, Loss: 0.2938, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:06:55,198 - Step 5700/150000, Loss: 0.2350, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:07:57,824 - Step 5800/150000, Loss: 0.3275, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:09:02,255 - Step 5900/150000, Loss: 0.3617, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:10:03,557 - Step 6000/150000, Loss: 0.3307, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:11:06,142 - Step 6100/150000, Loss: 0.2980, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:12:08,505 - Step 6200/150000, Loss: 0.3398, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:13:11,797 - Step 6300/150000, Loss: 0.2617, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:14:15,488 - Step 6400/150000, Loss: 0.2697, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:15:16,820 - Step 6500/150000, Loss: 0.3430, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:16:19,452 - Step 6600/150000, Loss: 0.3445, LR: 0.000100
+INFO - plantdoc_diffusion.py - 2025-12-30 04:17:21,990 - Step 6700/150000, Loss: 0.3259, LR: 0.000100

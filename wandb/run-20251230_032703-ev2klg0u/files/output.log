@@ -1,0 +1,52 @@
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:05,176 - Wandb initialized
+PlantDoc train: 2668 images, 27 classes
+  Augmentation probability: 25.0%
+  Top 5 classes: {23: 223, 12: 200, 8: 182, 11: 157, 18: 145}
+  Bottom 5 classes: {3: 34, 19: 44, 22: 44, 6: 47, 14: 57}
+PlantDoc test: 252 images, 27 classes
+  Augmentation probability: 0.0%
+  Top 5 classes: {23: 15, 11: 14, 8: 12, 18: 12, 25: 12}
+  Bottom 5 classes: {7: 4, 15: 6, 24: 6, 13: 7, 3: 8}
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:23,318 - Saved 252 real images for test
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:23,983 - ================================================================================
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:23,984 - Training PlantDoc: 2668 samples, 28 classes
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:23,984 - Batch: 32, Steps: 150000
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:23,985 - Diffusion timesteps: 100
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:23,985 - Augmentation prob: 25.0%
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:23,985 - Class dropout (CFG): 10.0%
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:23,985 - AMP: True (torch.bfloat16)
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:23,985 - Weighted sampler: True
+INFO - plantdoc_diffusion.py - 2025-12-30 03:27:23,985 - ================================================================================
+INFO - plantdoc_diffusion.py - 2025-12-30 03:29:05,064 - Step 100/150000, Loss: 0.6484, LR: 0.000010
+INFO - plantdoc_diffusion.py - 2025-12-30 03:30:06,919 - Step 200/150000, Loss: 0.3694, LR: 0.000020
+Traceback (most recent call last):
+  File "/workspace/ddim/main.py", line 259, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/workspace/ddim/main.py", line 251, in main
+    runner.train()
+  File "/workspace/ddim/runners/plantdoc_diffusion.py", line 276, in train
+    noise_pred = model(z_noisy, t, y)
+                 ^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/nn/parallel/data_parallel.py", line 192, in forward
+    return self.module(*inputs[0], **module_kwargs[0])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ddim/models/diffusion.py", line 312, in forward
+    temb = get_timestep_embedding(t, self.ch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ddim/models/diffusion.py", line 19, in get_timestep_embedding
+    emb = emb.to(device=timesteps.device)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

@@ -1,0 +1,6 @@
+{"time":"2025-12-30T03:51:08.200553632Z","level":"INFO","msg":"stream: starting","core version":"0.23.1"}
+{"time":"2025-12-30T03:51:08.694464852Z","level":"INFO","msg":"stream: created new stream","id":"wjzonaad"}
+{"time":"2025-12-30T03:51:08.694603762Z","level":"INFO","msg":"handler: started","stream_id":"wjzonaad"}
+{"time":"2025-12-30T03:51:08.694833012Z","level":"INFO","msg":"stream: started","id":"wjzonaad"}
+{"time":"2025-12-30T03:51:08.694879042Z","level":"INFO","msg":"writer: started","stream_id":"wjzonaad"}
+{"time":"2025-12-30T03:51:08.694920892Z","level":"INFO","msg":"sender: started","stream_id":"wjzonaad"}

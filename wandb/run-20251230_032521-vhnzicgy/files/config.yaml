@@ -1,0 +1,88 @@
+_wandb:
+    value:
+        cli_version: 0.23.1
+        e:
+            34b7axfohq8t887a3crl26enu689p2ma:
+                args:
+                    - --config
+                    - plantdoc_latent.yml
+                    - --doc
+                    - plantdoc_100steps_cfg
+                    - --exp
+                    - exp
+                    - --seed
+                    - "42"
+                    - --plantdoc
+                    - --ni
+                codePath: main.py
+                codePathLocal: main.py
+                cpu_count: 128
+                cpu_count_logical: 256
+                cudaVersion: "13.0"
+                disk:
+                    /:
+                        total: "9381213110272"
+                        used: "3952568061952"
+                email: thanhlamtba@gmail.com
+                executable: /venv/main/bin/python
+                git:
+                    commit: 9c21b3ed2d66e904b77b35519d9f88422fff56b5
+                    remote: https://github.com/thanhlamauto/ddim.git
+                gpu: NVIDIA GeForce RTX 4090
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 16384
+                      memoryTotal: "25757220864"
+                      name: NVIDIA GeForce RTX 4090
+                      uuid: GPU-0ff9cab4-bfe1-9006-5855-7717504cf511
+                host: 8caa12de97a3
+                memory:
+                    total: "811374333952"
+                os: Linux-6.8.0-90-generic-x86_64-with-glibc2.39
+                program: /workspace/ddim/main.py
+                python: CPython 3.12.12
+                root: /workspace/ddim
+                startedAt: "2025-12-30T03:25:21.717624Z"
+                writerId: 34b7axfohq8t887a3crl26enu689p2ma
+        m: []
+        python_version: 3.12.12
+        t:
+            "1":
+                - 1
+                - 11
+                - 41
+                - 49
+                - 51
+                - 71
+                - 83
+            "2":
+                - 1
+                - 11
+                - 41
+                - 49
+                - 51
+                - 71
+                - 83
+            "3":
+                - 13
+                - 15
+                - 16
+                - 61
+            "4": 3.12.12
+            "5": 0.23.1
+            "6": 4.57.3
+            "12": 0.23.1
+            "13": linux-x86_64
+augment_prob:
+    value: 0.25
+batch_size:
+    value: 32
+lr:
+    value: 0.0001
+n_iters:
+    value: 150000
+num_classes:
+    value: 28
+num_timesteps:
+    value: 100

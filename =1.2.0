@@ -1,0 +1,5 @@
+Collecting lmdb
+  Downloading lmdb-1.7.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (1.4 kB)
+Downloading lmdb-1.7.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (299 kB)
+Installing collected packages: lmdb
+Successfully installed lmdb-1.7.5

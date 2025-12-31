@@ -41,23 +41,23 @@ CLASS_NAMES = [
     "Tomato_healthy",
 ]
 
-# Number of images per class (same as original PlantVillage)
+# Number of images per class (balanced at 1024 for ablation study)
 CLASS_COUNTS = {
-    "Pepper__bell___Bacterial_spot": 997,
-    "Pepper__bell___healthy": 1478,
-    "Potato___Early_blight": 1000,
-    "Potato___Late_blight": 1000,
-    "Potato___healthy": 152,
-    "Tomato_Bacterial_spot": 2127,
-    "Tomato_Early_blight": 1000,
-    "Tomato_Late_blight": 1909,
-    "Tomato_Leaf_Mold": 952,
-    "Tomato_Septoria_leaf_spot": 1771,
-    "Tomato_Spider_mites_Two_spotted_spider_mite": 1676,
-    "Tomato__Target_Spot": 1404,
-    "Tomato__Tomato_YellowLeaf__Curl_Virus": 3209,
-    "Tomato__Tomato_mosaic_virus": 373,
-    "Tomato_healthy": 1591,
+    "Pepper__bell___Bacterial_spot": 1024,
+    "Pepper__bell___healthy": 1024,
+    "Potato___Early_blight": 1024,
+    "Potato___Late_blight": 1024,
+    "Potato___healthy": 1024,
+    "Tomato_Bacterial_spot": 1024,
+    "Tomato_Early_blight": 1024,
+    "Tomato_Late_blight": 1024,
+    "Tomato_Leaf_Mold": 1024,
+    "Tomato_Septoria_leaf_spot": 1024,
+    "Tomato_Spider_mites_Two_spotted_spider_mite": 1024,
+    "Tomato__Target_Spot": 1024,
+    "Tomato__Tomato_YellowLeaf__Curl_Virus": 1024,
+    "Tomato__Tomato_mosaic_virus": 1024,
+    "Tomato_healthy": 1024,
 }
 
 

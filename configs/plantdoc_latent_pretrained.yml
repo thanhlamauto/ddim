@@ -1,0 +1,88 @@
+data:
+    dataset: "PlantDoc"
+    data_root: "/workspace/PlantDoc"
+    image_size: 256
+    latent_size: 32  # 256/8 with SD VAE
+    channels: 4  # VAE latent channels
+    augment_prob: 0.9  # 90% augmentation (on-the-fly, infinite variations)
+    augment_strength: "balanced"  # Balanced for plant diseases - preserve color symptoms
+    rescaled: true
+    num_workers: 4
+    use_weighted_sampler: true  # Balance classes due to severe imbalance
+
+model:
+    type: "simple"
+    in_channels: 4
+    out_ch: 4
+    ch: 128  # Base channels
+    ch_mult: [1, 2, 2, 4]
+    num_res_blocks: 2
+    attn_resolutions: [16, 32]  # Attention at 16x16 and 32x32
+    dropout: 0.0
+    var_type: fixedlarge
+    ema_rate: 0.9999
+    ema: true
+    resamp_with_conv: true
+    # Class conditioning with CFG
+    conditional: true
+    num_classes: 28  # PlantDoc has 28 classes
+    class_dropout: 0.15  # 15% dropout for classifier-free guidance
+    # Pretrained initialization
+    use_pretrained: true
+    pretrained_path: "pretrained_init_plantdoc.pth"
+
+diffusion:
+    beta_schedule: cosine  # Cosine schedule
+    beta_start: 0.0001
+    beta_end: 0.02
+    num_diffusion_timesteps: 100  # 100 denoising steps
+
+training:
+    batch_size: 32  # Smaller batch due to smaller dataset
+    n_epochs: 10000
+    n_iters: 100000  # 100k steps (reduced from 150k with pretrained)
+    snapshot_freq: 10000  # Save checkpoint every 10k steps
+    validation_freq: 10000
+    log_freq: 100
+    sample_freq: 5000  # Generate samples every 5k steps
+    warmup_steps: 500  # Shorter warmup with pretrained weights
+    # Fine-tuning specific
+    freeze_encoder: false  # Set true to freeze early layers
+    freeze_steps: 0  # Freeze for first N steps, then unfreeze
+
+sampling:
+    batch_size: 16
+    last_only: true
+    num_inference_steps: 100  # 100 DDIM steps for inference
+    cfg_scale: 3.0  # Classifier-free guidance scale
+
+optim:
+    weight_decay: 0.01  # AdamW weight decay
+    optimizer: "AdamW"
+    lr: 0.00005  # Lower LR for fine-tuning (5e-5 instead of 1e-4)
+    beta1: 0.9
+    beta2: 0.999
+    amsgrad: false
+    eps: 0.00000001
+    grad_clip: 1.0
+
+# Mixed precision
+training_precision: "bf16"  # RTX 4090 supports bf16 well
+
+# VAE
+vae:
+    model_id: "stabilityai/sd-vae-ft-mse"
+
+# FID evaluation
+fid:
+    num_samples: 100
+    real_stats_path: null
+
+# Wandb logging
+wandb:
+    enabled: true
+    project: "ddim-plantdoc"
+    entity: null
+    name: "plantdoc-pretrained-ldm-100steps"
+    tags: ["plantdoc", "latent", "conditional", "100-steps", "pretrained", "ldm"]
+    notes: "PlantDoc fine-tuning from CompVis LDM (ImageNet cin256-v2) with balanced augmentation"

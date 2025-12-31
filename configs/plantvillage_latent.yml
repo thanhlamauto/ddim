@@ -38,23 +38,23 @@ diffusion:
     beta_schedule: cosine  # Cosine schedule
     beta_start: 0.0001
     beta_end: 0.02
-    num_diffusion_timesteps: 1000
+    num_diffusion_timesteps: 100
     prediction_type: "epsilon"  # hoặc "v_prediction"
 
 training:
-    batch_size: 256  
+    batch_size: 64  
     n_epochs: 10000  # Không giới hạn epochs
-    n_iters: 200000  # 200k steps - điểm ngọt
-    snapshot_freq: 25000  # Save mỗi 25k steps (8 lần total)
-    validation_freq: 25000
+    n_iters: 160000  # Extended from 100k to 160k
+    snapshot_freq: 20000  # Save mỗi 25k steps (8 lần total)
+    validation_freq: 20000
     log_freq: 100
     sample_freq: 10000  # Gen samples mỗi 10k steps
     warmup_steps: 2000
 
 sampling:
-    batch_size: 64
+    batch_size: 32
     last_only: true
-    num_inference_steps: 50  # DDIM steps
+    num_inference_steps: 100  # DDIM steps
     cfg_scale: 3.0  # Classifier-free guidance
 
 optim:
@@ -76,7 +76,7 @@ vae:
 
 # FID (reduced to save disk space)
 fid:
-    num_samples: 100
+    num_samples: 1024
     real_stats_path: null
 
 # Wandb

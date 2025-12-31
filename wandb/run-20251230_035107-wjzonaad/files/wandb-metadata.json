@@ -1,0 +1,52 @@
+{
+  "os":  "Linux-6.8.0-90-generic-x86_64-with-glibc2.39",
+  "python":  "CPython 3.12.12",
+  "startedAt":  "2025-12-30T03:51:07.921538Z",
+  "args":  [
+    "--config",
+    "plantdoc_latent.yml",
+    "--doc",
+    "plantdoc_100steps_cfg",
+    "--exp",
+    "exp",
+    "--seed",
+    "42",
+    "--plantdoc",
+    "--ni"
+  ],
+  "program":  "/workspace/ddim/main.py",
+  "codePath":  "main.py",
+  "codePathLocal":  "main.py",
+  "git":  {
+    "remote":  "https://github.com/thanhlamauto/ddim.git",
+    "commit":  "9c21b3ed2d66e904b77b35519d9f88422fff56b5"
+  },
+  "email":  "thanhlamtba@gmail.com",
+  "root":  "/workspace/ddim",
+  "host":  "8caa12de97a3",
+  "executable":  "/venv/main/bin/python",
+  "cpu_count":  128,
+  "cpu_count_logical":  256,
+  "gpu":  "NVIDIA GeForce RTX 4090",
+  "gpu_count":  1,
+  "disk":  {
+    "/":  {
+      "total":  "9381213110272",
+      "used":  "3996825894912"
+    }
+  },
+  "memory":  {
+    "total":  "811374333952"
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA GeForce RTX 4090",
+      "memoryTotal":  "25757220864",
+      "cudaCores":  16384,
+      "architecture":  "Ada",
+      "uuid":  "GPU-0ff9cab4-bfe1-9006-5855-7717504cf511"
+    }
+  ],
+  "cudaVersion":  "13.0",
+  "writerId":  "u74jv59trf2epxnshqklzm7nkc1vkztr"
+}

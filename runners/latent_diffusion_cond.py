@@ -40,6 +40,14 @@ try:
 except ImportError:
     FID_AVAILABLE = False
 
+try:
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from utils.inception_score import calculate_inception_score
+    IS_AVAILABLE = True
+except ImportError:
+    IS_AVAILABLE = False
+
 
 def cosine_beta_schedule(timesteps, s=0.008):
     """Cosine schedule as proposed in https://arxiv.org/abs/2102.09672"""
@@ -328,17 +336,19 @@ class LatentDiffusionCond:
                     ema_helper.ema(model)
 
                 model.eval()
-                val_fid, imgs = self._eval_fid(model, 'val', step)
+                val_fid, is_mean, is_std, imgs = self._eval_fid(model, 'val', step)
                 model.train()
 
                 if config.model.ema:
                     model.load_state_dict(backup)
 
-                logging.info(f"Step {step}: Val FID = {val_fid:.2f}")
+                logging.info(f"Step {step}: Val FID = {val_fid:.2f}, IS = {is_mean:.2f} ± {is_std:.2f}")
                 tb_logger.add_scalar("fid/val", val_fid, step)
+                tb_logger.add_scalar("is/val", is_mean, step)
+                tb_logger.add_scalar("is/val_std", is_std, step)
 
                 if use_wandb:
-                    wandb.log({"fid/val": val_fid}, step=step)
+                    wandb.log({"fid/val": val_fid, "is/val": is_mean, "is/val_std": is_std}, step=step)
                     if imgs is not None:
                         grid = tvu.make_grid(imgs[:16], nrow=4, padding=2)
                         grid_np = (grid.permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
@@ -426,14 +436,22 @@ class LatentDiffusionCond:
 
         all_imgs = torch.cat(all_imgs, dim=0)
 
+        # Calculate FID
         if FID_AVAILABLE:
             real_dir = os.path.join(self.args.log_path, f"real_{split}")
             fid_score = fid.compute_fid(real_dir, fake_dir, device=self.device, mode="clean")
         else:
             fid_score = 0.0
 
+        # Calculate Inception Score
+        if IS_AVAILABLE:
+            is_mean, is_std = calculate_inception_score(fake_dir, batch_size=50, device=self.device)
+            logging.info(f"IS: {is_mean:.2f} ± {is_std:.2f}")
+        else:
+            is_mean, is_std = 0.0, 0.0
+
         shutil.rmtree(fake_dir)
-        return fid_score, all_imgs
+        return fid_score, is_mean, is_std, all_imgs
 
     @torch.no_grad()
     def _sample_ddim(self, model, z, y, steps=50, cfg_scale=3.0):

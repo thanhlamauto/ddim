@@ -12,6 +12,7 @@ import torch.utils.tensorboard as tb
 from runners.diffusion import Diffusion
 from runners.latent_diffusion import LatentDiffusion
 from runners.latent_diffusion_cond import LatentDiffusionCond
+from runners.plantdoc_diffusion import PlantDocDiffusion
 
 torch.set_printoptions(sci_mode=False)
 
@@ -97,6 +98,11 @@ def parse_args_and_config():
         "--latent_cond",
         action="store_true",
         help="Use class-conditional latent diffusion with CFG",
+    )
+    parser.add_argument(
+        "--plantdoc",
+        action="store_true",
+        help="Use PlantDoc dataset with class-conditional latent diffusion",
     )
 
     args = parser.parse_args()
@@ -228,7 +234,9 @@ def main():
 
     try:
         # Choose runner based on flags
-        if args.latent_cond:
+        if args.plantdoc:
+            runner = PlantDocDiffusion(args, config)
+        elif args.latent_cond:
             runner = LatentDiffusionCond(args, config)
         elif args.latent:
             runner = LatentDiffusion(args, config)
